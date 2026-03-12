@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  servidor_app:
+    build: .
+    # O -u obriga o Python a imprimir na tela instantaneamente
+    command: python -u servidor.py
+    ports:
+      - "5000:5000/udp"
+      - "8080:8080/tcp"
+    networks:
+      - rede_iot
+
+  sensor_01:
+    build: .
+    # O -u obriga o Python a imprimir na tela instantaneamente
+    command: python -u sensor.py
+    environment:
+      - HOST_SERVIDOR=servidor_app
+    networks:
+      - rede_iot
+    depends_on:
+      - servidor_app
+
+networks:
+  rede_iot:
+    driver: bridge
