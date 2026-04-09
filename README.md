@@ -11,31 +11,20 @@ Sistema distribuído de monitoramento e automação para uma vinícola, desenvol
 - [Componentes](#componentes)
 - [Requisitos](#requisitos)
 - [Configuração de IPs](#configuração-de-ips)
-- [Como Executar](#como-executar)
+- [Como Executar o Programa](#como-executar-o-programa)
 - [Como Usar o Painel Web](#como-usar-o-painel-web)
 - [Comunicação entre Serviços](#comunicação-entre-serviços)
-- [Automação e Regras de Negócio](#automação-e-regras-de-negócio)
+- [Automação do Sistema](#automação-do-sistema)
 - [Variáveis de Ambiente](#variáveis-de-ambiente)
-- [Troubleshooting](#troubleshooting)
+- [Resolução de Problemas](#resolução-de-problemas)
 
 ---
 
 ## Visão Geral da Arquitetura
 
-O sistema foi projetado para funcionar distribuído em **múltiplos computadores (PCs)** em uma rede local:
+O sistema foi projetado para funcionar distribuído em **múltiplos computadores (PCs)** em uma rede local conforme diagrama abaixo:
 
-```
-[PC com Sensores]          [PC 1 — Broker]         [PC com Atuadores]
-  sensor-temp-mosto   ──►                      ◄──  atuador-resfriamento-mosto
-  sensor-densidade     UDP :8080              TCP   atuador-bomba-trasfega
-  sensor-umidade-adega                             atuador-resfriamento-adega
-  sensor-temp-adega
-  sensor-nivel-dorna
-                                   ▲ TCP :8081
-                                   │
-                            [PC 2 — Cliente Web]
-                             http://localhost:3000
-```
+![diagrama](imagens/diagrama.png)
 
 - **Sensores** enviam dados via **UDP** para o Broker a cada 1ms.
 - **Broker** agrega, processa, aplica física simulada, executa automação e persiste o estado.
@@ -49,24 +38,24 @@ O sistema foi projetado para funcionar distribuído em **múltiplos computadores
 ```
 vinicola/
 ├── broker/
-│   ├── main.go                 # Núcleo do sistema: recebe sensores, gerencia automação, serve o cliente
+│   ├── main.go                 # Servidor: recebe sensores, gerencia automação, serve o cliente, faz comunicação com os atuadores
 │   ├── Dockerfile              # Imagem Docker do broker (Go 1.21 Alpine)
 │   └── docker-compose.yml      # Sobe o serviço broker
 │
 ├── sensores/
-│   ├── main.go                 # Simulador de sensores com dados realistas
+│   ├── main.go                 # Simulador dos 5 sensores
 │   ├── Dockerfile              # Imagem Docker dos sensores (Go 1.21 Alpine)
 │   ├── docker-compose.yml      # Define os 5 sensores como serviços
-│   └── iniciar_sensores.sh     # Script inteligente: usa tmux, xterm ou background
+│   └── iniciar_sensores.sh     # Script: inicia os 5 sensores em containers
 │
 ├── atuadores/
 │   ├── main.go                 # Servidor TCP que recebe e confirma comandos
 │   ├── Dockerfile              # Imagem Docker dos atuadores (Go 1.21 Alpine)
 │   ├── docker-compose.yml      # Define os 3 atuadores como serviços
-│   └── iniciar_atuadores.sh    # Script inteligente com tmux/xterm/fallback
+│   └── iniciar_atuadores.sh    # Script: inicia os 3 atuadores em containers
 │
 └── cliente/
-    ├── main.go                 # Servidor HTTP + proxy TCP para o broker + HTML embarcado
+    ├── main.go                 # Servidor HTTP (web) + proxy TCP para o broker
     ├── Dockerfile              # Imagem Docker do cliente (Go 1.21 Alpine)
     └── docker-compose.yml      # Sobe o serviço cliente na porta 3000
 
@@ -79,10 +68,11 @@ vinicola/
 ### 🧠 Broker (`broker/`)
 Coração do sistema. Responsável por:
 - Receber dados dos sensores via **UDP na porta 8080**
+- Faz comunicação com o atuadores via **TCP**
 - Agregar leituras (média a cada 2 segundos)
-- Aplicar **física simulada** (efeito dos chillers na temperatura, fermentação na densidade, bomba no nível)
+- Aplicar **física simulada** (efeito dos refrigeradores na temperatura, fermentação na densidade, bomba no nível conforme os comandos dos atuadores)
 - Executar **lógica de automação** (ligar/desligar atuadores automaticamente)
-- Monitorar **saúde dos sensores e atuadores** com fail-safe
+- Monitorar **saúde dos sensores e atuadores** com fail-safe para garantir a conexão
 - Atender o **cliente web via TCP na porta 8081**
 - **Persistir o estado** em `estado_broker.json` a cada 5 segundos
 
@@ -97,7 +87,7 @@ Coração do sistema. Responsável por:
 | `sensor-temp-adega` | Temp da Adega | 8°C – 22°C | 1ms |
 | `sensor-nivel-dorna` | Nível da Dorna | 0% – 100% | 1ms |
 
-Cada sensor usa um **simulador senoidal com ruído gaussiano** para gerar dados realistas.
+Cada sensor usa um **simulador senoidal com ruído** para gerar dados mais próximos da realidade, apresentando variações suaves e evitando mudanças bruscas irrealistas.
 
 ### ⚙️ Atuadores (`atuadores/`)
 3 atuadores que escutam comandos TCP:
@@ -120,15 +110,12 @@ Servidor HTTP em Go (sem frameworks externos) que:
 
 O HTML é **embarcado diretamente no binário Go** (sem arquivos estáticos externos).
 
-### 🔥 Stress Test (`stress_test/`)
-Ferramenta de teste de carga que simula **500 sensores simultâneos** enviando **10 pacotes/segundo** cada um durante 60 segundos (total: ~300.000 pacotes UDP).
-
 ---
 
 ## Requisitos
 
 - **Docker** (versão 20+) e **Docker Compose** (versão 1.29+ ou v2)
-- **tmux** (opcional, mas recomendado para melhor visualização dos logs)
+- **tmux** (opcional, mas recomendado para facilitar rodar todos os programas)
 - Rede local entre os PCs (para implantação distribuída)
 - Portas abertas no firewall: `8080/udp`, `8081/tcp`, `3000/tcp`, `9090-9092/tcp`
 
@@ -141,7 +128,7 @@ Antes de executar, edite os IPs nos arquivos conforme a topologia da sua rede:
 | Arquivo | Variável | Descrição |
 |---|---|---|
 | `broker/docker-compose.yml` | `ATUADOR_HOST` | IP do PC onde os atuadores estão rodando |
-| `sensores/iniciar_sensores.sh` | `SERVER_IP` | IP:Porta do PC onde o broker está (ex: `192.168.1.10:8080`) |
+| `sensores/iniciar_sensores.sh` | `SERVER_IP` | IP: Porta do PC onde o broker está (ex: `192.168.1.10:8080`) |
 | `sensores/docker-compose.yml` | `SERVER_IP` (default) | Valor padrão se a variável não for passada |
 | `atuadores/iniciar_atuadores.sh` | `SERVER_IP` | IP do broker (para registro; os atuadores só escutam) |
 | `cliente/docker-compose.yml` | `BROKER_HOST` | IP do PC onde o broker está rodando |
@@ -150,37 +137,38 @@ Antes de executar, edite os IPs nos arquivos conforme a topologia da sua rede:
 
 ---
 
-## Como Executar
+## Como Executar o Programa
 
 ### Opção A — Implantação Distribuída (recomendada)
 
 Execute cada componente no PC correto:
 
-**PC 1 — Broker:**
+
+**PC 1 — com Sensores:**
+```bash
+cd sensores/
+chmod +x iniciar_sensores.sh
+./iniciar_sensores.sh
+```
+> O script detecta automaticamente `tmux`, `xterm` ou faz fallback para logs em arquivo.
+
+**PC 2 — com Atuadores:**
+```bash
+cd atuadores/
+# Instalar tmux (Opcional):
+sudo apt install tmux
+chmod +x iniciar_atuadores.sh
+./iniciar_atuadores.sh
+```
+
+**PC 3 — Broker:**
 ```bash
 cd broker/
 docker-compose build --no-cache broker
 docker-compose up broker
 ```
 
-**PC com Sensores:**
-```bash
-cd sensores/
-chmod +x iniciar_sensores.sh
-./iniciar_sensores.sh
-```
-> O script detecta automaticamente `tmux` (preferido), `xterm` ou faz fallback para logs em arquivo.
-
-**PC com Atuadores:**
-```bash
-cd atuadores/
-# Instalar tmux (recomendado):
-sudo apt install tmux
-chmod +x iniciar_atuadores.sh
-./iniciar_atuadores.sh
-```
-
-**PC 2 — Cliente Web:**
+**PC 4 — Cliente Web:**
 ```bash
 cd cliente/
 docker-compose build --no-cache cliente
@@ -233,7 +221,7 @@ O painel exibe:
 - **Histórico de Ações** — últimas 5 ações com hora, origem (AUTO/MANUAL) e status (CONFIRMADO/FALHA)
 - **Alertas do Sistema** — últimos 10 alertas críticos e avisos
 
-> O painel atualiza automaticamente a cada **1 segundo**. Se o broker cair, um banner vermelho é exibido e os dados são congelados na tela.
+> O painel atualiza automaticamente a cada **1 segundo**. Se o broker cair os dados são congelados na tela.
 
 **Comandos disponíveis via interface:**
 
@@ -249,8 +237,8 @@ O painel exibe:
 
 ```
 Sensores  ──UDP──►  Broker:8080
-                    Broker:8081  ◄──TCP──  Cliente
-                    Broker       ──TCP──►  Atuadores:9090/9091/9092
+                    Broker:8081  ◄──TCP──►  Cliente
+                    Broker       ◄──TCP──►  Atuadores:9090/9091/9092
 ```
 
 | Protocolo | Direção | Porta | Dados |
@@ -258,11 +246,11 @@ Sensores  ──UDP──►  Broker:8080
 | UDP | Sensores → Broker | 8080 | JSON: `{"id","tipo","valor"}` |
 | TCP | Broker → Atuadores | 9090–9092 | Texto: `LIGAR_REFRIG_MOSTO\n` |
 | TCP | Cliente → Broker | 8081 | Texto: `GET_STATUS\n` ou `CMD:9090:LIGAR_REFRIG_MOSTO\n` |
-| HTTP | Browser → Cliente | 3000 | REST: `GET /api/status`, `POST /api/comando` |
+| TCP | Browser → Cliente | 3000 | REST: `GET /api/status`, `POST /api/comando` |
 
 ---
 
-## Automação e Regras de Negócio
+## Automação do Sistema
 
 O broker executa as seguintes regras automaticamente a cada 2 segundos:
 
@@ -285,22 +273,6 @@ Se um sensor cair enquanto o atuador correspondente estiver ligado, o broker des
 
 ---
 
-## Teste de Carga (Stress Test)
-
-```bash
-cd stress_test/
-
-# Build
-docker build -t vinicola-stress .
-
-# Executar (ajuste o IP do broker)
-docker run --rm -e BROKER_ADDR="172.16.103.1:8080" vinicola-stress
-```
-
-O teste dispara **500 goroutines simultâneas**, cada uma enviando **10 pacotes UDP/segundo** por **60 segundos** — totalizando aproximadamente **300.000 pacotes** para validar a robustez do broker sob carga real.
-
----
-
 ## Variáveis de Ambiente
 
 ### Broker
@@ -311,7 +283,7 @@ O teste dispara **500 goroutines simultâneas**, cada uma enviando **10 pacotes 
 ### Sensores
 | Variável | Padrão | Descrição |
 |---|---|---|
-| `SERVER_IP` | `10.65.129.9:8080` | Endereço `IP:Porta` do broker |
+| `SERVER_IP` | `172.16.103.1:8080` | Endereço `IP:Porta` do broker |
 | `SENSOR_ID` | `SENS-01` | Identificador único do sensor |
 | `SENSOR_TIPO` | `Temperatura do Mosto` | Tipo de dado simulado |
 
@@ -346,7 +318,7 @@ sync        time
 
 ---
 
-## Troubleshooting
+## Resolução de Problemas
 
 **Sensores não aparecem no painel:**
 - Verifique se `SERVER_IP` no `iniciar_sensores.sh` aponta para o IP correto do broker
