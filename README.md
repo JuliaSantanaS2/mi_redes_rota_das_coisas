@@ -1,4 +1,4 @@
-# 🍷 Vinicola — Sistema de Monitoramento e Controle IoT
+# 🍷 Vinicola — Simulação de Sistema de Monitoramento 
 
 Sistema distribuído de monitoramento e automação para uma vinícola, desenvolvido em **Go (Golang)**. O sistema simula sensores físicos, processa dados em um broker central, controla atuadores remotamente e exibe tudo em um painel web em tempo real.
 
