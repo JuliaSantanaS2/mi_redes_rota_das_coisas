@@ -52,33 +52,25 @@ vinicola/
 ├── broker/
 │   ├── main.go                 # Núcleo do sistema: recebe sensores, gerencia automação, serve o cliente
 │   ├── Dockerfile              # Imagem Docker do broker (Go 1.21 Alpine)
-│   ├── docker-compose.yml      # Sobe o serviço broker
-│   └── codigo.txt              # Comandos rápidos para build e execução
+│   └── docker-compose.yml      # Sobe o serviço broker
 │
 ├── sensores/
 │   ├── main.go                 # Simulador de sensores com dados realistas
 │   ├── Dockerfile              # Imagem Docker dos sensores (Go 1.21 Alpine)
 │   ├── docker-compose.yml      # Define os 5 sensores como serviços
-│   ├── iniciar_sensores.sh     # Script inteligente: usa tmux, xterm ou background
-│   └── codigo.txt              # Comandos rápidos
+│   └── iniciar_sensores.sh     # Script inteligente: usa tmux, xterm ou background
 │
 ├── atuadores/
 │   ├── main.go                 # Servidor TCP que recebe e confirma comandos
 │   ├── Dockerfile              # Imagem Docker dos atuadores (Go 1.21 Alpine)
 │   ├── docker-compose.yml      # Define os 3 atuadores como serviços
-│   ├── iniciar_atuadores.sh    # Script inteligente com tmux/xterm/fallback
-│   └── codigo.txt              # Comandos rápidos
+│   └── iniciar_atuadores.sh    # Script inteligente com tmux/xterm/fallback
 │
-├── cliente/
-│   ├── main.go                 # Servidor HTTP + proxy TCP para o broker + HTML embarcado
-│   ├── Dockerfile              # Imagem Docker do cliente (Go 1.21 Alpine)
-│   ├── docker-compose.yml      # Sobe o serviço cliente na porta 3000
-│   └── codigo.txt              # Comandos rápidos
-│
-└── stress_test/
-    ├── main.go                 # Simulador de carga: 500 sensores simultâneos, 10Hz cada
-    ├── Dockerfile              # Imagem Docker do stress test (Go 1.22 Alpine)
-    └── codigo.txt              # Comandos rápidos
+└── cliente/
+    ├── main.go                 # Servidor HTTP + proxy TCP para o broker + HTML embarcado
+    ├── Dockerfile              # Imagem Docker do cliente (Go 1.21 Alpine)
+    └── docker-compose.yml      # Sobe o serviço cliente na porta 3000
+
 ```
 
 ---

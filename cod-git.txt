@@ -15,3 +15,12 @@ git remote add origin https://github.com/JuliaSantanaS2/mi_redes_rota_das_coisas
 
 # Envia tudo! (O git provavelmente vai abrir uma telinha pedindo permissão de acesso ao GitHub)
 git push -u origin main
+
+
+git add .
+
+
+git commit -m "atualização"
+
+
+git push
