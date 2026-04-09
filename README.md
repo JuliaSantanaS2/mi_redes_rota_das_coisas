@@ -15,7 +15,6 @@ Sistema distribuído de monitoramento e automação para uma vinícola, desenvol
 - [Como Usar o Painel Web](#como-usar-o-painel-web)
 - [Comunicação entre Serviços](#comunicação-entre-serviços)
 - [Automação e Regras de Negócio](#automação-e-regras-de-negócio)
-- [Teste de Carga (Stress Test)](#teste-de-carga-stress-test)
 - [Variáveis de Ambiente](#variáveis-de-ambiente)
 - [Troubleshooting](#troubleshooting)
 
