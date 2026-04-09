@@ -1,0 +1,15 @@
+version: '3.8'
+
+# ================================================================
+#  PC 2 - Tela de Monitoramento (Cliente Web)
+# ================================================================
+
+services:
+  cliente:
+    build: .
+    container_name: vinicola-cliente
+    restart: always
+    environment:
+      - BROKER_HOST=172.16.103.1
+    ports:
+      - "3000:3000" # Porta que vai acessar localhost:3000 neste PC

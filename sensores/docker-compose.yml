@@ -1,0 +1,58 @@
+version: '3.8'
+
+# ================================================================
+#  Vinicola — Sensores
+#  Uso:
+#    SERVER_IP="10.65.129.9:8080" docker-compose up --build
+#
+#  Para rodar sensores individuais:
+#    SERVER_IP="10.65.129.9:8080" docker-compose up --build sensor-temp-mosto
+# ================================================================
+
+x-sensor-base: &sensor-base
+  build: .
+  restart: always
+  environment:
+    - SERVER_IP=${SERVER_IP:-10.65.129.9:8080}
+
+services:
+
+  sensor-temp-mosto:
+    <<: *sensor-base
+    container_name: sensor-temp-mosto
+    environment:
+      - SERVER_IP=${SERVER_IP:-10.65.129.9:8080}
+      - SENSOR_ID=${SENSOR_ID_TEMP_MOSTO:-SENS-TEMP-MOSTO-01}
+      - SENSOR_TIPO=Temperatura do Mosto
+
+  sensor-densidade:
+    <<: *sensor-base
+    container_name: sensor-densidade
+    environment:
+      - SERVER_IP=${SERVER_IP:-10.65.129.9:8080}
+      - SENSOR_ID=${SENSOR_ID_DENSIDADE:-SENS-DENS-MOSTO-01}
+      - SENSOR_TIPO=Densidade do Mosto
+
+  sensor-umidade-adega:
+    <<: *sensor-base
+    container_name: sensor-umidade-adega
+    environment:
+      - SERVER_IP=${SERVER_IP:-10.65.129.9:8080}
+      - SENSOR_ID=${SENSOR_ID_UMIDADE:-SENS-UMID-ADEGA-01}
+      - SENSOR_TIPO=Umidade da Adega
+
+  sensor-temp-adega:
+    <<: *sensor-base
+    container_name: sensor-temp-adega
+    environment:
+      - SERVER_IP=${SERVER_IP:-10.65.129.9:8080}
+      - SENSOR_ID=${SENSOR_ID_TEMP_ADEGA:-SENS-TEMP-ADEGA-01}
+      - SENSOR_TIPO=Temp da Adega
+
+  sensor-nivel-dorna:
+    <<: *sensor-base
+    container_name: sensor-nivel-dorna
+    environment:
+      - SERVER_IP=${SERVER_IP:-10.65.129.9:8080}
+      - SENSOR_ID=${SENSOR_ID_NIVEL:-SENS-NIVEL-DORNA-01}
+      - SENSOR_TIPO=Nível da Dorna

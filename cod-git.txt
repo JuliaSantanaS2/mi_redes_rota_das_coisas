@@ -1,0 +1,17 @@
+# Inicia o controle de versão nessa pasta
+git init
+
+# Adiciona todos os arquivos (ignorando o que configuramos no .gitignore)
+git add .
+
+# Salva as mudanças em um commit
+git commit -m "Meu primeiro commit com sensores e docker"
+
+# Define o nome da branch principal como main
+git branch -M main
+
+# Conecta a pasta local com o seu repositório lá no GitHub
+git remote add origin https://github.com/JuliaSantanaS2/mi_redes_rota_das_coisas.git
+
+# Envia tudo! (O git provavelmente vai abrir uma telinha pedindo permissão de acesso ao GitHub)
+git push -u origin main

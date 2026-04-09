@@ -1,0 +1,17 @@
+version: '3.8'
+
+# ================================================================
+#  PC 1 - Servidor Core (Broker)
+# ================================================================
+
+services:
+  broker:
+    build: .
+    container_name: vinicola-broker
+    restart: always
+    environment:
+      # AQUI VAI O IP DA MÁQUINA ONDE OS ATUADORES ESTÃO RODANDO
+      - ATUADOR_HOST=172.16.103.13
+    ports:
+      - "8080:8080/udp" # Abre a porta pro Sensores
+      - "8081:8081"     # Abre a porta pro Cliente Web conectar

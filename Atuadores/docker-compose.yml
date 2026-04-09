@@ -1,0 +1,43 @@
+version: '3.8'
+
+# ================================================================
+#  Vinicola — Atuadores
+# ================================================================
+
+x-atuador-base: &atuador-base
+  build: .
+  restart: always
+  environment:
+    - SERVER_IP=${SERVER_IP:-172.16.103.1:8080}
+
+services:
+
+  atuador-resfriamento-mosto:
+    <<: *atuador-base
+    container_name: atuador-resfriamento-mosto
+    environment:
+      - SERVER_IP=${SERVER_IP:-172.16.103.1:8080}
+      - ATUADOR_NOME=Resfriamento do Mosto
+      - ATUADOR_PORTA=9090
+    ports:
+      - "9090:9090"
+
+  atuador-bomba-trasfega:
+    <<: *atuador-base
+    container_name: atuador-bomba-trasfega
+    environment:
+      - SERVER_IP=${SERVER_IP:-172.16.103.1:8080}
+      - ATUADOR_NOME=Bomba de Trasfega
+      - ATUADOR_PORTA=9091
+    ports:
+      - "9091:9091"
+
+  atuador-resfriamento-adega:
+    <<: *atuador-base
+    container_name: atuador-resfriamento-adega
+    environment:
+      - SERVER_IP=${SERVER_IP:-172.16.103.1:8080}
+      - ATUADOR_NOME=Resfriamento da Adega
+      - ATUADOR_PORTA=9092
+    ports:
+      - "9092:9092"
